@@ -30,11 +30,17 @@ public class GameWindow extends JFrame {
                 gamePanel.updateGame();
                 gamePanel.repaint();
                 try {
-                    Thread.sleep(16);
+                    Thread.sleep(16); // 约60FPS
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }).start();
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new GameWindow();
+        });
     }
 }
