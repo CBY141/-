@@ -11,6 +11,8 @@ public class Bullet {
         this.direction = direction;
     }
 
+
+    
     public void update() {
         switch (direction) {
             case GameConfig.DIR_UP: y -= GameConfig.BULLET_SPEED; break;
@@ -23,13 +25,11 @@ public class Bullet {
             alive = false;
         }
     }
-
     public void draw(Graphics g) {
         if (!alive) return;
         g.setColor(Color.YELLOW);
         g.fillRect(x - 2, y - 2, 4, 4);
     }
-
     public boolean isAlive() { return alive; }
     public void setAlive(boolean alive) { this.alive = alive; }
 
