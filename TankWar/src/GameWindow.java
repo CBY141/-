@@ -13,9 +13,10 @@ public class GameWindow extends JFrame {
         gamePanel = new GamePanel();
         add(gamePanel);
 
-        addKeyListener(gamePanel);
-        addMouseListener(gamePanel);
-        addMouseMotionListener(gamePanel);
+        // 注意：已移除以下行，因为GamePanel内部已处理输入监听
+        // addKeyListener(gamePanel);
+        // addMouseListener(gamePanel);
+        // addMouseMotionListener(gamePanel);
 
         setFocusable(true);
         requestFocus();
