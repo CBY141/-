@@ -5,13 +5,13 @@ public class Bullet {
     private int direction;
     private boolean alive = true;
     private Color color;
-    private boolean fromPlayer; // 新增：记录子弹来源
+    private boolean fromPlayer;
 
     public Bullet(int x, int y, int direction, boolean fromPlayer) {
         this.x = x;
         this.y = y;
         this.direction = direction;
-        this.fromPlayer = fromPlayer; // 存储来源
+        this.fromPlayer = fromPlayer;
         this.color = fromPlayer ? new Color(255, 255, 0) : new Color(255, 100, 0);
     }
 
@@ -46,7 +46,11 @@ public class Bullet {
 
     public boolean isAlive() { return alive; }
     public void setAlive(boolean alive) { this.alive = alive; }
-    public boolean isFromPlayer() { return fromPlayer; } // 新增：获取来源
+    public boolean isFromPlayer() { return fromPlayer; }
+
+    // 新增方法：获取子弹坐标，用于地图碰撞检测
+    public int getX() { return x; }
+    public int getY() { return y; }
 
     public boolean collidesWith(int targetX, int targetY, int targetSize) {
         int bulletCenterX = x;
