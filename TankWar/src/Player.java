@@ -21,16 +21,13 @@ public class Player {
         if (down) newY += GameConfig.PLAYER_SPEED;
         if (left) newX -= GameConfig.PLAYER_SPEED;
         if (right) newX += GameConfig.PLAYER_SPEED;
-
         newX = Math.max(0, Math.min(newX, GameConfig.WINDOW_WIDTH - GameConfig.TANK_WIDTH));
         newY = Math.max(0, Math.min(newY, GameConfig.WINDOW_HEIGHT - GameConfig.TANK_HEIGHT));
-
         if (world.isPositionPassable(newX, newY, GameConfig.TANK_WIDTH, GameConfig.TANK_HEIGHT)) {
             x = newX;
             y = newY;
         }
         inGrass = world.isInGrass(x, y);
-
         if (shoot && shootCooldown == 0) {
             int bulletX = x + GameConfig.TANK_WIDTH / 2;
             int bulletY = y + GameConfig.TANK_HEIGHT / 2;
@@ -40,7 +37,6 @@ public class Player {
             else if (Math.abs(angle) > 3*Math.PI/4) direction = GameConfig.DIR_LEFT;
             else if (angle > 0) direction = GameConfig.DIR_DOWN;
             else direction = GameConfig.DIR_UP;
-
             bullets.add(new Bullet(bulletX, bulletY, direction, true));
             shootCooldown = SHOOT_COOLDOWN_TIME;
         }
@@ -53,7 +49,6 @@ public class Player {
         Color tankColor = GameConfig.PLAYER_TANK_COLOR;
         Color detailColor = GameConfig.TANK_DETAIL_COLOR;
         Color turretColor = GameConfig.TANK_TURRET_COLOR;
-
         if (inGrass) {
             tankColor = new Color(tankColor.getRed(), tankColor.getGreen(), tankColor.getBlue(), 100);
             detailColor = new Color(detailColor.getRed(), detailColor.getGreen(), detailColor.getBlue(), 100);

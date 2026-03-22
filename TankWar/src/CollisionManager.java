@@ -4,6 +4,10 @@ public class CollisionManager {
     public static void checkBulletEnemyCollisions(List<Bullet> bullets, List<Enemy> enemies, List<Explosion> explosions) {
         for (Bullet bullet : bullets) {
             if (!bullet.isAlive()) continue;
+            // 关键修复：只有玩家子弹能击中敌人
+            if (!bullet.isFromPlayer()) {
+                continue; // 跳过敌人子弹
+            }
             for (Enemy enemy : enemies) {
                 if (enemy.alive && bullet.collidesWith(enemy.x, enemy.y, GameConfig.TANK_WIDTH)) {
                     bullet.setAlive(false);
@@ -17,6 +21,10 @@ public class CollisionManager {
     public static void checkBulletPlayerCollisions(List<Bullet> bullets, Player player, List<Explosion> explosions) {
         for (Bullet bullet : bullets) {
             if (!bullet.isAlive()) continue;
+            // 关键修复：只有敌人子弹能击中玩家
+            if (bullet.isFromPlayer()) {
+                continue; // 跳过玩家子弹
+            }
             if (bullet.collidesWith(player.x, player.y, GameConfig.TANK_WIDTH)) {
                 bullet.setAlive(false);
                 player.lives--;

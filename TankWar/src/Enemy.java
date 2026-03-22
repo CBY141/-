@@ -18,17 +18,12 @@ public class Enemy {
 
     public void update(GameWorld gameWorld, List<Bullet> bullets) {
         if (!alive) return;
-
         moveTimer++;
         shootTimer++;
-
-        // 随机移动
         if (moveTimer > 60) {
             direction = random.nextInt(4);
             moveTimer = 0;
         }
-
-        // 移动
         int newX = x;
         int newY = y;
         switch (direction) {
@@ -37,15 +32,12 @@ public class Enemy {
             case GameConfig.DIR_LEFT: newX -= GameConfig.ENEMY_SPEED; break;
             case GameConfig.DIR_RIGHT: newX += GameConfig.ENEMY_SPEED; break;
         }
-
         if (gameWorld.isPositionPassable(newX, newY, GameConfig.TANK_WIDTH, GameConfig.TANK_HEIGHT)) {
             x = newX;
             y = newY;
         } else {
             direction = random.nextInt(4);
         }
-
-        // 随机射击
         if (shootTimer > 120 && random.nextInt(100) < 5) {
             int bulletX = x + GameConfig.TANK_WIDTH / 2;
             int bulletY = y + GameConfig.TANK_HEIGHT / 2;
@@ -56,14 +48,9 @@ public class Enemy {
 
     public void draw(Graphics g) {
         if (!alive) return;
-
         int centerX = x + GameConfig.TANK_WIDTH / 2;
         int centerY = y + GameConfig.TANK_HEIGHT / 2;
-
-        // 绘制坦克主体
         drawTankBody(g, x, y, GameConfig.ENEMY_TANK_COLOR, GameConfig.TANK_DETAIL_COLOR);
-
-        // 绘制炮管
         Color turretColor = GameConfig.TANK_TURRET_COLOR;
         int turretEndX = centerX, turretEndY = centerY;
         switch (direction) {
@@ -77,12 +64,8 @@ public class Enemy {
         g2d.setStroke(new BasicStroke(3));
         g2d.drawLine(centerX, centerY, turretEndX, turretEndY);
         g2d.setStroke(new BasicStroke(1));
-
-        // 炮塔
         g.setColor(turretColor.darker());
         g.fillOval(centerX - 4, centerY - 4, 8, 8);
-
-        // 敌人标识
         g.setColor(Color.RED);
         g.fillRect(centerX - 2, y + 2, 4, 4);
     }
@@ -105,7 +88,7 @@ public class Enemy {
         int thisCenterX = x + GameConfig.TANK_WIDTH / 2;
         int thisCenterY = y + GameConfig.TANK_HEIGHT / 2;
         int targetCenterX = targetX + GameConfig.TANK_WIDTH / 2;
-        int targetCenterY = targetY + GameConfig.TANK_HEIGHT / 2;
+        int targetCenterY = targetY + GameConfig.TANK_WIDTH / 2;
         int dx = thisCenterX - targetCenterX;
         int dy = thisCenterY - targetCenterY;
         int distance = (int)Math.sqrt(dx*dx + dy*dy);

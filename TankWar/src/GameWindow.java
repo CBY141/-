@@ -12,16 +12,10 @@ public class GameWindow extends JFrame {
 
         gamePanel = new GamePanel();
         add(gamePanel);
-
-        // 注意：已移除以下行，因为GamePanel内部已处理输入监听
-        // addKeyListener(gamePanel);
-        // addMouseListener(gamePanel);
-        // addMouseMotionListener(gamePanel);
-
+        // 注意：已移除将gamePanel作为监听器的三行代码
         setFocusable(true);
         requestFocus();
         setVisible(true);
-
         startGameLoop();
     }
 
@@ -31,7 +25,7 @@ public class GameWindow extends JFrame {
                 gamePanel.updateGame();
                 gamePanel.repaint();
                 try {
-                    Thread.sleep(16); // 约60FPS
+                    Thread.sleep(16);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
