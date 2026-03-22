@@ -88,7 +88,7 @@ public class Enemy {
         int thisCenterX = x + GameConfig.TANK_WIDTH / 2;
         int thisCenterY = y + GameConfig.TANK_HEIGHT / 2;
         int targetCenterX = targetX + GameConfig.TANK_WIDTH / 2;
-        int targetCenterY = targetY + GameConfig.TANK_WIDTH / 2;
+        int targetCenterY = targetY + GameConfig.TANK_HEIGHT / 2;
         int dx = thisCenterX - targetCenterX;
         int dy = thisCenterY - targetCenterY;
         int distance = (int)Math.sqrt(dx*dx + dy*dy);

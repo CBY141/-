@@ -12,7 +12,6 @@ public class GameWindow extends JFrame {
 
         gamePanel = new GamePanel();
         add(gamePanel);
-        // 注意：已移除将gamePanel作为监听器的三行代码
         setFocusable(true);
         requestFocus();
         setVisible(true);

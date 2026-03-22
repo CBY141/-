@@ -11,7 +11,6 @@ public class MapTile {
         this.x = x;
         this.y = y;
         this.type = type;
-
         switch (type) {
             case GameConfig.TILE_BRICK:
             case GameConfig.TILE_STEEL:
@@ -26,14 +25,10 @@ public class MapTile {
     public void draw(Graphics g) {
         int pixelX = x * GameConfig.TILE_SIZE;
         int pixelY = y * GameConfig.TILE_SIZE;
-
         switch (type) {
             case GameConfig.TILE_BRICK:
-                // 砖墙纹理
-                g.setColor(new Color(160, 80, 40));  // 基础色
+                g.setColor(new Color(160, 80, 40));
                 g.fillRect(pixelX, pixelY, GameConfig.TILE_SIZE, GameConfig.TILE_SIZE);
-
-                // 砖块缝隙
                 g.setColor(new Color(120, 60, 20));
                 g.drawRect(pixelX, pixelY, GameConfig.TILE_SIZE, GameConfig.TILE_SIZE);
                 g.drawLine(pixelX + GameConfig.TILE_SIZE/2, pixelY,
@@ -41,13 +36,9 @@ public class MapTile {
                 g.drawLine(pixelX, pixelY + GameConfig.TILE_SIZE/2,
                         pixelX + GameConfig.TILE_SIZE, pixelY + GameConfig.TILE_SIZE/2);
                 break;
-
             case GameConfig.TILE_STEEL:
-                // 钢墙纹理
                 g.setColor(new Color(120, 120, 120));
                 g.fillRect(pixelX, pixelY, GameConfig.TILE_SIZE, GameConfig.TILE_SIZE);
-
-                // 铆钉效果
                 g.setColor(Color.DARK_GRAY);
                 for (int i = 2; i < GameConfig.TILE_SIZE; i += 4) {
                     for (int j = 2; j < GameConfig.TILE_SIZE; j += 4) {
@@ -55,13 +46,9 @@ public class MapTile {
                     }
                 }
                 break;
-
             case GameConfig.TILE_GRASS:
-                // 草丛纹理（更自然）
                 g.setColor(new Color(40, 160, 40, 180));
                 g.fillRect(pixelX, pixelY, GameConfig.TILE_SIZE, GameConfig.TILE_SIZE);
-
-                // 草叶
                 g.setColor(new Color(20, 120, 20));
                 for (int i = 0; i < GameConfig.TILE_SIZE; i += 3) {
                     int height = 2 + random.nextInt(4);
@@ -69,13 +56,9 @@ public class MapTile {
                             pixelX + i, pixelY + GameConfig.TILE_SIZE - height);
                 }
                 break;
-
             case GameConfig.TILE_WATER:
-                // 水波纹效果
                 g.setColor(new Color(30, 120, 220, 120));
                 g.fillRect(pixelX, pixelY, GameConfig.TILE_SIZE, GameConfig.TILE_SIZE);
-
-                // 波浪线
                 g.setColor(new Color(60, 150, 255, 180));
                 for (int i = 0; i < GameConfig.TILE_SIZE; i += 8) {
                     g.drawArc(pixelX + i, pixelY + 3, 6, 3, 0, 180);

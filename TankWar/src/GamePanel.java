@@ -15,7 +15,26 @@ public class GamePanel extends JPanel {
     public GamePanel() {
         setBackground(Color.BLACK);
         gameWorld = new GameWorld();
-        player = new Player(100, 100);
+        // 设置玩家初始位置为地图中心，并确保可通行
+        int startX = GameConfig.MAP_WIDTH / 2 * GameConfig.TILE_SIZE;
+        int startY = GameConfig.MAP_HEIGHT / 2 * GameConfig.TILE_SIZE;
+        player = new Player(startX, startY);
+        if (!gameWorld.isPositionPassable(player.x, player.y, GameConfig.TANK_WIDTH, GameConfig.TANK_HEIGHT)) {
+            boolean found = false;
+            for (int offset = 1; offset < 10 && !found; offset++) {
+                for (int dx = -offset; dx <= offset && !found; dx++) {
+                    for (int dy = -offset; dy <= offset && !found; dy++) {
+                        int testX = player.x + dx * GameConfig.TILE_SIZE;
+                        int testY = player.y + dy * GameConfig.TILE_SIZE;
+                        if (gameWorld.isPositionPassable(testX, testY, GameConfig.TANK_WIDTH, GameConfig.TANK_HEIGHT)) {
+                            player.x = testX;
+                            player.y = testY;
+                            found = true;
+                        }
+                    }
+                }
+            }
+        }
         gameLogic = new GameLogic(player, enemies, bullets, explosions, gameWorld, inputHandler);
         gameLogic.initializeEnemies(GameConfig.ENEMY_COUNT);
         this.addKeyListener(inputHandler);

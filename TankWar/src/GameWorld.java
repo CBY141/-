@@ -2,15 +2,15 @@ import java.awt.*;
 import java.util.Random;
 
 public class GameWorld {
-    public MapTile[][] map; // 修改：从 private 改为 public，便于GameLogic访问
+    public MapTile[][] map; // 改为public便于访问
     private Random random = new Random();
 
     public GameWorld() {
         map = new MapTile[GameConfig.MAP_WIDTH][GameConfig.MAP_HEIGHT];
-        generateMap();
+        generateMap(); // 确保此方法存在且完整
     }
 
-    // 注意：以下所有方法体与之前完全一致，未做任何改动
+    // 完整的地图生成方法
     private void generateMap() {
         for (int x = 0; x < GameConfig.MAP_WIDTH; x++) {
             for (int y = 0; y < GameConfig.MAP_HEIGHT; y++) {
@@ -122,5 +122,14 @@ public class GameWorld {
             return false;
         }
         return map[tileX][tileY].getType() == GameConfig.TILE_GRASS;
+    }
+
+    // 新增：销毁砖墙
+    public void destroyTile(int tileX, int tileY) {
+        if (tileX >= 0 && tileX < GameConfig.MAP_WIDTH && tileY >= 0 && tileY < GameConfig.MAP_HEIGHT) {
+            if (map[tileX][tileY].getType() == GameConfig.TILE_BRICK) {
+                map[tileX][tileY] = new MapTile(tileX, tileY, GameConfig.TILE_EMPTY);
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@ public class Bullet {
     private int direction;
     private boolean alive = true;
     private Color color;
-    private boolean fromPlayer;
+    private boolean fromPlayer; // 记录子弹来源
 
     public Bullet(int x, int y, int direction, boolean fromPlayer) {
         this.x = x;
@@ -47,10 +47,8 @@ public class Bullet {
     public boolean isAlive() { return alive; }
     public void setAlive(boolean alive) { this.alive = alive; }
     public boolean isFromPlayer() { return fromPlayer; }
-
-    // 新增方法：获取子弹坐标，用于地图碰撞检测
-    public int getX() { return x; }
-    public int getY() { return y; }
+    public int getX() { return x; } // 用于碰撞检测
+    public int getY() { return y; } // 用于碰撞检测
 
     public boolean collidesWith(int targetX, int targetY, int targetSize) {
         int bulletCenterX = x;
