@@ -1,4 +1,6 @@
 import javax.swing.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class GameWindow extends JFrame {
     private GamePanel gamePanel;
@@ -12,9 +14,22 @@ public class GameWindow extends JFrame {
 
         gamePanel = new GamePanel();
         add(gamePanel);
-        setFocusable(true);
-        requestFocus();
+
+        // 窗口激活时传递焦点
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowActivated(WindowEvent e) {
+                gamePanel.requestFocusInWindow();
+            }
+        });
+
         setVisible(true);
+
+        // 窗口显示后确保GamePanel获得焦点
+        SwingUtilities.invokeLater(() -> {
+            gamePanel.requestFocusInWindow();
+        });
+
         startGameLoop();
     }
 

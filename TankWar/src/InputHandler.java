@@ -19,6 +19,7 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
             case KeyEvent.VK_SPACE: spacePressed = true; break;
         }
     }
+
     @Override
     public void keyReleased(KeyEvent e) {
         switch (e.getKeyCode()) {
@@ -29,22 +30,34 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
             case KeyEvent.VK_SPACE: spacePressed = false; break;
         }
     }
+
     @Override public void keyTyped(KeyEvent e) {}
+
     @Override
     public void mouseMoved(MouseEvent e) {
         mouseX = e.getX();
         mouseY = e.getY();
     }
+
     @Override
-    public void mouseDragged(MouseEvent e) { mouseMoved(e); }
+    public void mouseDragged(MouseEvent e) {
+        mouseMoved(e);
+    }
+
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) spacePressed = true;
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            spacePressed = true;
+        }
     }
+
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) spacePressed = false;
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            spacePressed = false;
+        }
     }
+
     @Override public void mouseClicked(MouseEvent e) {}
     @Override public void mouseEntered(MouseEvent e) {}
     @Override public void mouseExited(MouseEvent e) {}
