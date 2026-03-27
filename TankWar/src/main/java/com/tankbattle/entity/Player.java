@@ -13,9 +13,24 @@ public class Player {
     private int shootCooldown = 0;
     private static final int SHOOT_COOLDOWN_TIME = 20;
 
+    // 记录初始位置，用于重置
+    private int startX, startY;
+
     public Player(int startX, int startY) {
         this.x = startX;
         this.y = startY;
+        this.startX = startX;
+        this.startY = startY;
+    }
+
+    // 新增：重置玩家状态
+    public void reset() {
+        this.x = startX;
+        this.y = startY;
+        this.lives = GameConfig.PLAYER_LIVES;
+        this.inGrass = false;
+        this.dead = false;
+        this.shootCooldown = 0;
     }
 
     public void update(boolean up, boolean down, boolean left, boolean right, boolean shoot,

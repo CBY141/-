@@ -22,6 +22,14 @@ public class GameWindow extends JFrame {
             public void windowActivated(WindowEvent e) {
                 gamePanel.requestFocusInWindow();
             }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // 窗口关闭时释放音频资源
+                if (gamePanel.getGameLogic() != null && gamePanel.getGameLogic().getAudioManager() != null) {
+                    gamePanel.getGameLogic().getAudioManager().dispose();
+                }
+            }
         });
 
         setVisible(true);

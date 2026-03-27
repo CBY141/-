@@ -8,6 +8,7 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
     public boolean leftPressed = false;
     public boolean rightPressed = false;
     public boolean spacePressed = false;
+    public boolean rPressed = false;  // 新增：R键状态
     public int mouseX = 0;
     public int mouseY = 0;
 
@@ -19,6 +20,7 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
             case KeyEvent.VK_A: leftPressed = true; break;
             case KeyEvent.VK_D: rightPressed = true; break;
             case KeyEvent.VK_SPACE: spacePressed = true; break;
+            case KeyEvent.VK_R: rPressed = true; break;  // 新增：R键按下
         }
     }
 
@@ -30,6 +32,7 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
             case KeyEvent.VK_A: leftPressed = false; break;
             case KeyEvent.VK_D: rightPressed = false; break;
             case KeyEvent.VK_SPACE: spacePressed = false; break;
+            case KeyEvent.VK_R: rPressed = false; break;  // 新增：R键释放
         }
     }
 

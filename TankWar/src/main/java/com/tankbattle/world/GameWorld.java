@@ -14,54 +14,108 @@ public class GameWorld {
     }
 
     private void generateMap() {
+        // 1. 初始化所有格子为空地
         for (int x = 0; x < GameConfig.MAP_WIDTH; x++) {
             for (int y = 0; y < GameConfig.MAP_HEIGHT; y++) {
                 map[x][y] = new MapTile(x, y, GameConfig.TILE_EMPTY);
             }
         }
+
+        // 2. 创建四周的钢铁和砖墙边界
         for (int x = 0; x < GameConfig.MAP_WIDTH; x++) {
             map[x][0] = new MapTile(x, 0, GameConfig.TILE_STEEL);
             map[x][1] = new MapTile(x, 1, GameConfig.TILE_BRICK);
             map[x][GameConfig.MAP_HEIGHT-1] = new MapTile(x, GameConfig.MAP_HEIGHT-1, GameConfig.TILE_STEEL);
             map[x][GameConfig.MAP_HEIGHT-2] = new MapTile(x, GameConfig.MAP_HEIGHT-2, GameConfig.TILE_BRICK);
         }
+
         for (int y = 0; y < GameConfig.MAP_HEIGHT; y++) {
             map[0][y] = new MapTile(0, y, GameConfig.TILE_STEEL);
             map[1][y] = new MapTile(1, y, GameConfig.TILE_BRICK);
             map[GameConfig.MAP_WIDTH-1][y] = new MapTile(GameConfig.MAP_WIDTH-1, y, GameConfig.TILE_STEEL);
             map[GameConfig.MAP_WIDTH-2][y] = new MapTile(GameConfig.MAP_WIDTH-2, y, GameConfig.TILE_BRICK);
         }
+
+        // 3. 生成随机障碍物
         generateObstacles(GameConfig.TILE_BRICK, 60);
         generateObstacles(GameConfig.TILE_STEEL, 15);
         generateObstacles(GameConfig.TILE_GRASS, 40);
         generateObstacles(GameConfig.TILE_WATER, 12);
+
+        // 4. 创建对称结构
         createSymmetricStructures();
-        clearArea(20, 25, 10, 8);
+
+        // 5. 确保中心区域是空的（玩家出生区域）
+        clearCenterArea();
+    }
+
+    // 新增：专门清理中心区域的方法
+    private void clearCenterArea() {
+        int centerX = GameConfig.MAP_WIDTH / 2;
+        int centerY = GameConfig.MAP_HEIGHT / 2;
+
+        // 清理一个9x9的区域，确保玩家出生点安全
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dy = -4; dy <= 4; dy++) {
+                int x = centerX + dx;
+                int y = centerY + dy;
+                if (x >= 0 && x < GameConfig.MAP_WIDTH && y >= 0 && y < GameConfig.MAP_HEIGHT) {
+                    // 移除中心的钢铁十字
+                    map[x][y] = new MapTile(x, y, GameConfig.TILE_EMPTY);
+                }
+            }
+        }
     }
 
     private void generateObstacles(int type, int count) {
         for (int i = 0; i < count; i++) {
             int x, y;
+            int attempts = 0;
             do {
                 x = random.nextInt(GameConfig.MAP_WIDTH-4) + 2;
                 y = random.nextInt(GameConfig.MAP_HEIGHT-4) + 2;
-            } while (map[x][y].getType() != GameConfig.TILE_EMPTY);
-            map[x][y] = new MapTile(x, y, type);
+                attempts++;
+                // 避免在中心区域生成障碍物
+                int centerX = GameConfig.MAP_WIDTH / 2;
+                int centerY = GameConfig.MAP_HEIGHT / 2;
+                if (Math.abs(x - centerX) <= 6 && Math.abs(y - centerY) <= 6) {
+                    continue; // 跳过中心区域
+                }
+            } while (attempts < 100 && map[x][y].getType() != GameConfig.TILE_EMPTY);
+
+            if (attempts < 100) {
+                map[x][y] = new MapTile(x, y, type);
+            }
         }
     }
 
     private void createSymmetricStructures() {
         int centerX = GameConfig.MAP_WIDTH / 2;
         int centerY = GameConfig.MAP_HEIGHT / 2;
-        for (int i = -2; i <= 2; i++) {
-            if (centerX + i >= 0 && centerX + i < GameConfig.MAP_WIDTH) {
-                map[centerX + i][centerY] = new MapTile(centerX + i, centerY, GameConfig.TILE_STEEL);
-            }
-            if (centerY + i >= 0 && centerY + i < GameConfig.MAP_HEIGHT) {
-                map[centerX][centerY + i] = new MapTile(centerX, centerY + i, GameConfig.TILE_STEEL);
+
+        // 不再在中心创建钢铁十字，而是创建远离中心的装饰
+        int[][] steelPatterns = {
+                {centerX - 10, centerY},
+                {centerX + 10, centerY},
+                {centerX, centerY - 10},
+                {centerX, centerY + 10}
+        };
+
+        for (int[] pos : steelPatterns) {
+            int x = pos[0];
+            int y = pos[1];
+            if (x >= 0 && x < GameConfig.MAP_WIDTH && y >= 0 && y < GameConfig.MAP_HEIGHT) {
+                map[x][y] = new MapTile(x, y, GameConfig.TILE_STEEL);
             }
         }
-        int[][] corners = {{5,5}, {GameConfig.MAP_WIDTH-6,5}, {5,GameConfig.MAP_HEIGHT-6}, {GameConfig.MAP_WIDTH-6,GameConfig.MAP_HEIGHT-6}};
+
+        int[][] corners = {
+                {5,5},
+                {GameConfig.MAP_WIDTH-6,5},
+                {5,GameConfig.MAP_HEIGHT-6},
+                {GameConfig.MAP_WIDTH-6,GameConfig.MAP_HEIGHT-6}
+        };
+
         for (int[] corner : corners) {
             int cx = corner[0];
             int cy = corner[1];
@@ -79,18 +133,6 @@ public class GameWorld {
         }
     }
 
-    private void clearArea(int centerX, int centerY, int width, int height) {
-        int startX = Math.max(2, centerX - width/2);
-        int startY = Math.max(2, centerY - height/2);
-        int endX = Math.min(GameConfig.MAP_WIDTH-3, centerX + width/2);
-        int endY = Math.min(GameConfig.MAP_HEIGHT-3, centerY + height/2);
-        for (int x = startX; x <= endX; x++) {
-            for (int y = startY; y <= endY; y++) {
-                map[x][y] = new MapTile(x, y, GameConfig.TILE_EMPTY);
-            }
-        }
-    }
-
     public void draw(Graphics g) {
         for (int x = 0; x < GameConfig.MAP_WIDTH; x++) {
             for (int y = 0; y < GameConfig.MAP_HEIGHT; y++) {
@@ -104,6 +146,7 @@ public class GameWorld {
         int tileY1 = pixelY / GameConfig.TILE_SIZE;
         int tileX2 = (pixelX + width - 1) / GameConfig.TILE_SIZE;
         int tileY2 = (pixelY + height - 1) / GameConfig.TILE_SIZE;
+
         for (int x = tileX1; x <= tileX2; x++) {
             for (int y = tileY1; y <= tileY2; y++) {
                 if (x < 0 || x >= GameConfig.MAP_WIDTH || y < 0 || y >= GameConfig.MAP_HEIGHT) {
