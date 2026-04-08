@@ -27,8 +27,8 @@ public class GameWindow extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                // 窗口关闭时释放音频资源
-                ResourceManager.getInstance().dispose();
+                // 窗口关闭时停止游戏
+                GameManager.getInstance().stop();
             }
         });
 
@@ -47,7 +47,7 @@ public class GameWindow extends JFrame {
                 gamePanel.updateGame();
                 gamePanel.repaint();
                 try {
-                    Thread.sleep(16);
+                    Thread.sleep(16); // 约60FPS
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

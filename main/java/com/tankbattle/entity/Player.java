@@ -16,6 +16,11 @@ public class Player {
     // 记录初始位置，用于重置
     private int startX, startY;
 
+    // 调试信息
+    private int moveCount = 0;
+    private int shootCount = 0;
+    private String lastMoveDirection = "";
+
     public Player(int startX, int startY) {
         ConfigManager config = ConfigManager.getInstance();
         this.lives = config.getInt(ConfigManager.KEY_PLAYER_LIVES);
@@ -23,6 +28,8 @@ public class Player {
         this.y = startY;
         this.startX = startX;
         this.startY = startY;
+
+        System.out.println("玩家创建: 位置(" + x + "," + y + "), 生命:" + lives);
     }
 
     // 新增：重置玩家状态
@@ -34,11 +41,20 @@ public class Player {
         this.inGrass = false;
         this.dead = false;
         this.shootCooldown = 0;
+        this.moveCount = 0;
+        this.shootCount = 0;
+
+        System.out.println("玩家重置: 位置(" + x + "," + y + "), 生命:" + lives);
     }
 
     public void update(boolean up, boolean down, boolean left, boolean right, boolean shoot,
                        int mouseX, int mouseY, GameWorld world, List<Bullet> bullets) {
-        if (dead) return;
+        if (dead) {
+            if (moveCount % 30 == 0) { // 每秒输出一次
+                System.out.println("玩家已死亡，不处理输入");
+            }
+            return;
+        }
 
         ConfigManager config = ConfigManager.getInstance();
         int playerSpeed = config.getInt(ConfigManager.KEY_PLAYER_SPEED);
@@ -49,10 +65,31 @@ public class Player {
 
         int newX = x;
         int newY = y;
+
+        // 计算新位置
         if (up) newY -= playerSpeed;
         if (down) newY += playerSpeed;
         if (left) newX -= playerSpeed;
         if (right) newX += playerSpeed;
+
+        // 检查是否有移动
+        boolean isMoving = (up || down || left || right);
+
+        // 构建移动方向字符串
+        String moveDirection = "";
+        if (up) moveDirection += "U";
+        if (down) moveDirection += "D";
+        if (left) moveDirection += "L";
+        if (right) moveDirection += "R";
+        if (moveDirection.isEmpty()) moveDirection = "无";
+
+        // 只有移动方向变化时才输出
+        if (isMoving && !moveDirection.equals(lastMoveDirection)) {
+            System.out.println("玩家移动方向: " + moveDirection + " 速度: " + playerSpeed);
+            lastMoveDirection = moveDirection;
+        }
+
+        moveCount++;
 
         int originalX = x;
         int originalY = y;
@@ -68,19 +105,38 @@ public class Player {
             x = originalX;
             y = originalY;
 
+            if (isMoving && moveCount % 20 == 0) { // 减少输出频率
+                System.out.println("移动被阻挡，返回原位置 (" + originalX + "," + originalY + ")");
+            }
+
+            // 尝试X方向移动
             if (world.isPositionPassable(newX, originalY, tankWidth, tankHeight) &&
                     newX >= 0 && newX <= windowWidth - tankWidth) {
                 x = newX;
+                if (isMoving) {
+                    System.out.println("X方向移动成功: " + originalX + " -> " + newX);
+                }
             }
+
+            // 尝试Y方向移动
             if (world.isPositionPassable(originalX, newY, tankWidth, tankHeight) &&
                     newY >= 0 && newY <= windowHeight - tankHeight) {
                 y = newY;
+                if (isMoving) {
+                    System.out.println("Y方向移动成功: " + originalY + " -> " + newY);
+                }
             }
+        } else if (isMoving && moveCount % 30 == 0) { // 减少输出频率
+            System.out.println("移动成功: (" + originalX + "," + originalY + ") -> (" + x + "," + y + ")");
         }
 
         inGrass = world.isInGrass(x, y);
+        if (inGrass && moveCount % 60 == 0) { // 每秒输出一次
+            System.out.println("玩家在草丛中，隐身状态");
+        }
 
         if (shoot && shootCooldown == 0) {
+            shootCount++;
             int bulletX = x + tankWidth / 2;
             int bulletY = y + tankHeight / 2;
             double angle = Math.atan2(mouseY - bulletY, mouseX - bulletX);
@@ -90,11 +146,30 @@ public class Player {
             else if (angle > 0) direction = ConfigManager.DIR_DOWN;
             else direction = ConfigManager.DIR_UP;
 
-            bullets.add(new Bullet(bulletX, bulletY, direction, true));
+            // 创建子弹
+            Bullet bullet = new Bullet(bulletX, bulletY, direction, true);
+            bullets.add(bullet);
             shootCooldown = SHOOT_COOLDOWN_TIME;
+
+            System.out.println("玩家发射子弹 #" + shootCount +
+                    ": 位置(" + bulletX + "," + bulletY +
+                    ") 方向:" + getDirectionName(direction) +
+                    " 角度:" + String.format("%.1f", Math.toDegrees(angle)));
+        } else if (shoot && moveCount % 20 == 0) { // 减少输出频率
+            System.out.println("射击冷却中: " + shootCooldown + "/" + SHOOT_COOLDOWN_TIME);
         }
 
         if (shootCooldown > 0) shootCooldown--;
+    }
+
+    private String getDirectionName(int direction) {
+        switch (direction) {
+            case ConfigManager.DIR_UP: return "上";
+            case ConfigManager.DIR_DOWN: return "下";
+            case ConfigManager.DIR_LEFT: return "左";
+            case ConfigManager.DIR_RIGHT: return "右";
+            default: return "未知";
+        }
     }
 
     public void draw(Graphics g, int mouseX, int mouseY) {
@@ -116,6 +191,8 @@ public class Player {
         }
         drawTankBody(g, x, y, tankColor, detailColor);
         drawTankTurret(g, centerX, centerY, mouseX, mouseY, turretColor, turretLength);
+
+        // 绘制玩家标识
         g.setColor(Color.WHITE);
         g.fillPolygon(new int[]{centerX, centerX - 3, centerX + 3},
                 new int[]{y + 2, y + 8, y + 8}, 3);

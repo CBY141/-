@@ -104,18 +104,27 @@ public class Enemy {
         g.drawRect(x + 6, y + 6, tankWidth - 12, tankHeight - 12);
     }
 
+    /**
+     * 修复碰撞检测 - 使用正确的tankHeight计算中心Y坐标
+     */
     public boolean collidesWith(int targetX, int targetY) {
         ConfigManager config = ConfigManager.getInstance();
         int tankWidth = config.getInt(ConfigManager.KEY_TANK_WIDTH);
+        int tankHeight = config.getInt(ConfigManager.KEY_TANK_HEIGHT);
 
+        // 修复：使用正确的宽高计算中心点
         int thisCenterX = x + tankWidth / 2;
-        int thisCenterY = y + tankWidth / 2;  // 注意：这里使用tankWidth，因为坦克是正方形
+        int thisCenterY = y + tankHeight / 2;  // 修复：使用tankHeight而不是tankWidth
+
         int targetCenterX = targetX + tankWidth / 2;
-        int targetCenterY = targetY + tankWidth / 2;
+        int targetCenterY = targetY + tankHeight / 2;  // 修复：使用tankHeight而不是tankWidth
+
         int dx = thisCenterX - targetCenterX;
         int dy = thisCenterY - targetCenterY;
         int distance = (int)Math.sqrt(dx*dx + dy*dy);
-        int collisionDistance = tankWidth - 2;
+
+        // 使用坦克宽度作为碰撞距离（假设坦克是正方形）
+        int collisionDistance = tankWidth - 5;  // 留出一些边距
         return distance < collisionDistance;
     }
 }
