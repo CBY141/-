@@ -23,6 +23,20 @@ public class PlayingState extends BaseGameState {
     private int updateCount = 0;
     private String lastInputStatus = "";
 
+    // 事件监听器
+    private EventListener gameEventListener = new EventListener() {
+        @Override
+        public void onEvent(GameEvent event) {
+            handleGameEvent(event);
+        }
+    };
+
+    // 游戏状态
+    private int totalEnemiesKilled = 0;
+    private int totalShotsFired = 0;
+    private int totalDamageTaken = 0;
+    private long gameStartTime = 0;
+
     public PlayingState(GameManager gameManager) {
         super(gameManager);
     }
@@ -30,6 +44,9 @@ public class PlayingState extends BaseGameState {
     @Override
     public void enter() {
         System.out.println("进入游戏状态");
+        gameStartTime = System.currentTimeMillis();
+
+        // 初始化游戏世界
         gameWorld = GameObjectFactory.createGameWorld();
         player = GameObjectFactory.createPlayerAtSafePosition(gameWorld);
         initializeEnemies(ConfigManager.getInstance().getInt(ConfigManager.KEY_ENEMY_COUNT));
@@ -39,6 +56,29 @@ public class PlayingState extends BaseGameState {
         wasShooting = false;
         updateCount = 0;
 
+        // 重置统计
+        totalEnemiesKilled = 0;
+        totalShotsFired = 0;
+        totalDamageTaken = 0;
+
+        // 注册事件监听器
+        EventManager eventManager = EventManager.getInstance();
+        eventManager.registerListener(gameEventListener,
+                Event.EventType.GAME_STARTED,
+                Event.EventType.PLAYER_SPAWNED,
+                Event.EventType.PLAYER_DIED,
+                Event.EventType.PLAYER_HIT,
+                Event.EventType.ENEMY_SPAWNED,
+                Event.EventType.ENEMY_DIED,
+                Event.EventType.BULLET_FIRED,
+                Event.EventType.EXPLOSION_CREATED,
+                Event.EventType.GAME_OVER
+        );
+
+        // 触发游戏开始事件
+        eventManager.triggerEvent(GameEvent.gameStarted());
+
+        // 播放音效
         ResourceManager.getInstance().playSound("start");
         ResourceManager.getInstance().playBackgroundMusic();
 
@@ -50,7 +90,15 @@ public class PlayingState extends BaseGameState {
     @Override
     public void exit() {
         System.out.println("退出游戏状态");
+
+        // 注销事件监听器
+        EventManager.getInstance().unregisterListener(gameEventListener);
+
+        // 停止背景音乐
         ResourceManager.getInstance().stopBackgroundMusic();
+
+        // 打印游戏统计
+        printGameStats();
     }
 
     @Override
@@ -90,6 +138,7 @@ public class PlayingState extends BaseGameState {
         if (isShootingNow && !wasShooting) {
             ResourceManager.getInstance().playSound("shoot");
             System.out.println("播放射击音效");
+            totalShotsFired++;
         }
         wasShooting = isShootingNow;
 
@@ -123,6 +172,14 @@ public class PlayingState extends BaseGameState {
                                 tileY * tileSize + tileSize / 2
                         ));
                         ResourceManager.getInstance().playSound("explosion");
+
+                        // 触发爆炸事件
+                        EventManager.getInstance().triggerEvent(
+                                GameEvent.explosionCreated(
+                                        new Point(tileX * tileSize + tileSize / 2,
+                                                tileY * tileSize + tileSize / 2)
+                                )
+                        );
                     }
                     bullet.setAlive(false);
                 }
@@ -188,6 +245,12 @@ public class PlayingState extends BaseGameState {
         if (keyCode == 82) { // R键返回主菜单
             System.out.println("R键按下，返回主菜单");
             gameManager.changeState(GameManager.GameStateType.MENU);
+        } else if (keyCode == 116) { // F5快速保存
+            System.out.println("F5键按下，快速保存");
+            SaveManager.getInstance().quickSave();
+        } else if (keyCode == 117) { // F6快速加载
+            System.out.println("F6键按下，快速加载");
+            SaveManager.getInstance().quickLoad();
         }
     }
 
@@ -199,6 +262,61 @@ public class PlayingState extends BaseGameState {
     @Override
     public void mouseMoved(int x, int y) {
         // 鼠标移动事件
+    }
+
+    // 处理游戏事件
+    private void handleGameEvent(GameEvent event) {
+        System.out.println("收到事件: " + event.getType() +
+                " 来源: " + event.getSource() +
+                " 数据: " + event.getData());
+
+        switch (event.getType()) {
+            case PLAYER_SPAWNED:
+                System.out.println("事件: 玩家生成");
+                break;
+
+            case PLAYER_DIED:
+                System.out.println("事件: 玩家死亡");
+                ResourceManager.getInstance().playSound("gameover");
+                break;
+
+            case PLAYER_HIT:
+                System.out.println("事件: 玩家受伤，伤害: " + event.getData());
+                totalDamageTaken += (int)event.getData();
+                ResourceManager.getInstance().playSound("hit");
+                break;
+
+            case ENEMY_DIED:
+                System.out.println("事件: 敌人死亡");
+                totalEnemiesKilled++;
+                // 给玩家加分
+                if (player != null) {
+                    player.addScore(100);
+                }
+                // 触发成就检查
+                AchievementManager.getInstance().onEvent(event);
+                break;
+
+            case ENEMY_SPAWNED:
+                System.out.println("事件: 敌人生成");
+                break;
+
+            case BULLET_FIRED:
+                System.out.println("事件: 子弹发射");
+                break;
+
+            case EXPLOSION_CREATED:
+                System.out.println("事件: 爆炸创建");
+                break;
+
+            case GAME_STARTED:
+                System.out.println("事件: 游戏开始");
+                break;
+
+            default:
+                // 忽略其他事件
+                break;
+        }
     }
 
     private void initializeEnemies(int count) {
@@ -219,7 +337,13 @@ public class PlayingState extends BaseGameState {
             } while (attempts < 50 && !gameWorld.isPositionPassable(x, y, tankWidth, tankHeight));
 
             if (attempts < 50) {
-                enemies.add(new Enemy(x, y));
+                Enemy enemy = new Enemy(x, y);
+                enemies.add(enemy);
+
+                // 触发敌人生成事件
+                EventManager.getInstance().triggerEvent(
+                        GameEvent.enemySpawned(enemy)
+                );
             }
         }
     }
@@ -237,6 +361,11 @@ public class PlayingState extends BaseGameState {
                     enemy.alive = false;
                     explosions.add(new Explosion(enemy.x + tankWidth/2, enemy.y + tankWidth/2));
                     ResourceManager.getInstance().playSound("explosion");
+
+                    // 触发敌人死亡事件
+                    EventManager.getInstance().triggerEvent(
+                            GameEvent.enemyDied(enemy)
+                    );
                     break;
                 }
             }
@@ -247,20 +376,25 @@ public class PlayingState extends BaseGameState {
             if (!bullet.isAlive() || bullet.isFromPlayer()) continue;
             if (bullet.collidesWith(player.x, player.y, tankWidth)) {
                 bullet.setAlive(false);
-                player.lives--;
-                ResourceManager.getInstance().playSound("hit");
-                if (player.lives <= 0) player.dead = true;
+                // 使用新的受伤方法
+                player.takeDamage(1);
             }
         }
 
         // 敌人与玩家碰撞
         for (Enemy enemy : enemies) {
             if (enemy.alive && enemy.collidesWith(player.x, player.y)) {
-                player.lives--;
                 enemy.alive = false;
                 explosions.add(new Explosion(enemy.x + tankWidth/2, enemy.y + tankWidth/2));
                 ResourceManager.getInstance().playSound("explosion");
-                if (player.lives <= 0) player.dead = true;
+
+                // 触发敌人死亡事件
+                EventManager.getInstance().triggerEvent(
+                        GameEvent.enemyDied(enemy)
+                );
+
+                // 玩家受伤
+                player.takeDamage(1);
             }
         }
         enemies.removeIf(e -> !e.alive);
@@ -269,30 +403,53 @@ public class PlayingState extends BaseGameState {
     private void checkGameEndConditions() {
         if (player.dead) {
             System.out.println("玩家死亡，游戏结束");
+
+            // 触发游戏结束事件
+            EventManager.getInstance().triggerEvent(
+                    GameEvent.gameOver(false)
+            );
+
             gameManager.changeState(GameManager.GameStateType.GAME_OVER);
         } else if (enemies.isEmpty()) {
             System.out.println("所有敌人被消灭，游戏胜利");
+
+            // 触发游戏胜利事件
+            EventManager.getInstance().triggerEvent(
+                    new GameEvent(Event.EventType.GAME_VICTORY, null, true)
+            );
+
             gameManager.changeState(GameManager.GameStateType.VICTORY);
         }
     }
 
     private void drawGameUI(Graphics g) {
         ResourceManager rm = ResourceManager.getInstance();
+
+        // 基本信息
         g.setColor(Color.WHITE);
         g.setFont(rm.getSafeFont(Font.BOLD, 16));
         g.drawString("生命值: " + player.lives, 10, 20);
         g.drawString("敌人剩余: " + enemies.size(), 10, 40);
-        g.setColor(Color.CYAN);
-        g.drawString("按 R 键返回主菜单", 10, 60);
+        g.drawString("分数: " + player.getScore(), 10, 60);
 
-        // 显示输入状态
-        InputHandler input = gameManager.getInputHandler();
-        if (input != null) {
-            g.setColor(Color.YELLOW);
-            g.drawString("输入状态: W:" + input.upPressed + " A:" + input.leftPressed +
-                    " S:" + input.downPressed + " D:" + input.rightPressed, 10, 80);
-            g.drawString("射击: " + input.spacePressed, 10, 100);
-        }
+        // 控制提示
+        g.setColor(Color.CYAN);
+        g.setFont(rm.getSafeFont(Font.PLAIN, 14));
+        g.drawString("按 R 键返回主菜单", 10, 80);
+        g.drawString("按 F5 快速保存", 10, 100);
+        g.drawString("按 F6 快速加载", 10, 120);
+
+        // 游戏统计
+        g.setColor(Color.ORANGE);
+        g.drawString("消灭敌人: " + totalEnemiesKilled, 10, 140);
+        g.drawString("发射子弹: " + totalShotsFired, 10, 160);
+        g.drawString("承受伤害: " + totalDamageTaken, 10, 180);
+
+        // 成就信息
+        AchievementManager achievementManager = AchievementManager.getInstance();
+        g.setColor(Color.MAGENTA);
+        g.drawString("成就: " + achievementManager.getUnlockedCount() +
+                "/" + achievementManager.getTotalCount(), 10, 200);
     }
 
     private void drawCrosshair(Graphics g, int mouseX, int mouseY) {
@@ -300,5 +457,17 @@ public class PlayingState extends BaseGameState {
         g.drawLine(mouseX - 10, mouseY, mouseX + 10, mouseY);
         g.drawLine(mouseX, mouseY - 10, mouseX, mouseY + 10);
         g.drawOval(mouseX - 5, mouseY - 5, 10, 10);
+    }
+
+    // 打印游戏统计
+    private void printGameStats() {
+        long gameTime = (System.currentTimeMillis() - gameStartTime) / 1000;
+        System.out.println("========== 游戏统计 ==========");
+        System.out.println("游戏时间: " + gameTime + "秒");
+        System.out.println("消灭敌人: " + totalEnemiesKilled);
+        System.out.println("发射子弹: " + totalShotsFired);
+        System.out.println("承受伤害: " + totalDamageTaken);
+        System.out.println("最终分数: " + player.getScore());
+        System.out.println("============================");
     }
 }

@@ -1,6 +1,6 @@
 package main.java.com.tankbattle.entity;
 
-import main.java.com.tankbattle.core.ConfigManager;
+import main.java.com.tankbattle.core.*;
 import main.java.com.tankbattle.world.GameWorld;
 import java.awt.*;
 import java.util.List;
@@ -20,6 +20,7 @@ public class Player {
     private int moveCount = 0;
     private int shootCount = 0;
     private String lastMoveDirection = "";
+    private int score = 0;
 
     public Player(int startX, int startY) {
         ConfigManager config = ConfigManager.getInstance();
@@ -30,6 +31,11 @@ public class Player {
         this.startY = startY;
 
         System.out.println("玩家创建: 位置(" + x + "," + y + "), 生命:" + lives);
+
+        // 触发玩家生成事件
+        EventManager.getInstance().triggerEvent(
+                GameEvent.playerSpawned(this)
+        );
     }
 
     // 新增：重置玩家状态
@@ -43,6 +49,7 @@ public class Player {
         this.shootCooldown = 0;
         this.moveCount = 0;
         this.shootCount = 0;
+        this.score = 0;
 
         System.out.println("玩家重置: 位置(" + x + "," + y + "), 生命:" + lives);
     }
@@ -151,6 +158,11 @@ public class Player {
             bullets.add(bullet);
             shootCooldown = SHOOT_COOLDOWN_TIME;
 
+            // 触发子弹发射事件
+            EventManager.getInstance().triggerEvent(
+                    GameEvent.bulletFired(new Point(bulletX, bulletY), true)
+            );
+
             System.out.println("玩家发射子弹 #" + shootCount +
                     ": 位置(" + bulletX + "," + bulletY +
                     ") 方向:" + getDirectionName(direction) +
@@ -160,6 +172,41 @@ public class Player {
         }
 
         if (shootCooldown > 0) shootCooldown--;
+    }
+
+    // 新增：玩家受伤方法
+    public void takeDamage(int damage) {
+        if (dead || damage <= 0) return;
+
+        int oldHealth = lives;
+        lives -= damage;
+
+        // 触发玩家受伤事件
+        EventManager.getInstance().triggerEvent(
+                GameEvent.playerHit(this, damage)
+        );
+
+        if (lives <= 0) {
+            lives = 0;
+            dead = true;
+
+            // 触发玩家死亡事件
+            EventManager.getInstance().triggerEvent(
+                    GameEvent.playerDied(this)
+            );
+        } else if (oldHealth > lives) {
+            System.out.println("玩家受伤: 生命 " + oldHealth + " -> " + lives);
+        }
+    }
+
+    // 新增：增加分数
+    public void addScore(int points) {
+        score += points;
+        System.out.println("玩家获得分数: " + points + " 总分: " + score);
+    }
+
+    public int getScore() {
+        return score;
     }
 
     private String getDirectionName(int direction) {
