@@ -1,4 +1,6 @@
-import main.java.com.tankbattle.core.GameWindow;
+package main.java.com.tankbattle;
+
+import main.java.com.tankbattle.game.ui.GameWindow;
 import javax.swing.*;
 
 public class Main {
